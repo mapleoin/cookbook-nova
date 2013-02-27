@@ -61,15 +61,3 @@ end
 
 identity_admin_endpoint = endpoint "identity-admin"
 service_pass = service_password "nova"
-
-template "/etc/nova/api-paste.ini" do
-  source "api-paste.ini.erb"
-  owner  node["nova"]["user"]
-  group  node["nova"]["group"]
-  mode   00644
-  variables(
-    :identity_admin_endpoint => identity_admin_endpoint,
-    :service_pass => service_pass
-  )
-  notifies :restart, "service[nova-api-os-compute]"
-end
