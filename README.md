@@ -19,6 +19,7 @@ Platforms
 
 * Ubuntu-12.04
 * Fedora-17
+* openSUSE 12.3 / SLES 11 SP2
 
 Cookbooks
 ---------
