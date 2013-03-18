@@ -112,6 +112,7 @@ when "suse"
     service "boot.cgroup" do
       action [:enable, :start]
     end
+  end
 end
 
 
