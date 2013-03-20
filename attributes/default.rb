@@ -33,10 +33,6 @@ default["nova"]["service_tenant_name"] = "service"
 default["nova"]["service_user"] = "nova"
 default["nova"]["service_role"] = "admin"
 
-# Controls for the PKI options in the auth_token middleware
-# that is in the paste INI files.
-default["nova"]["pki"]["signing_dir"] = "/tmp/nova-signing-dir"
-
 case platform
 when "fedora", "redhat", "centos", "ubuntu"
   default["nova"]["user"] = "nova"
@@ -178,8 +174,7 @@ default["nova"]["ratelimit"]["settings"] = {
 }
 default["nova"]["ratelimit"]["api"]["enabled"] = true
 
-# Keystone PKI signing directory. Only written to the filter:authtoken section
-# of the api-paste.ini when node["openstack"]["auth"]["strategy"] == "pki"
+# Keystone PKI signing directories
 default["nova"]["api"]["auth"]["cache_dir"] = "/var/cache/nova/api"
 default["nova"]["ceilometer-api"]["auth"]["cache_dir"] = "/var/cache/nova/ceilometer-api"
 
