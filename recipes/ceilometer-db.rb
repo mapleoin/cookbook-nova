@@ -18,14 +18,9 @@
 #
 
 db_info = db 'metering'
-if db_info['db_type'] == 'mysql'
-  include_recipe "mysql::client"
-  include_recipe "mysql::ruby"
+db_password = db_password "ceilometer"
 
-  db_password = db_password "ceilometer"
-
-  # method only supports mysql
-  db_create_with_user( db_info["name"],
-                       node["nova"]["ceilometer"]["db"]["username"],
-                       db_password)
-end
+db_create_with_user(
+  db_info["name"],
+  node["nova"]["ceilometer"]["db"]["username"],
+  db_password)
