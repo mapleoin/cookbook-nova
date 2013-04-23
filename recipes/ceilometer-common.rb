@@ -16,72 +16,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-require "uri"
 
 class ::Chef::Recipe
   include ::Openstack
 end
 
-include_recipe "nova::nova-common"
-include_recipe "python::pip"
-if node["nova"]["ceilometer"]["syslog"]["use"]
-  include_recipe "openstack-common::logging"
-end
-
 ceilometer_conf = node["nova"]["ceilometer"]["conf"]
 
-dependent_pkgs = node["nova"]["ceilometer"]["dependent_pkgs"]
-dependent_pkgs.each do |pkg|
-  package pkg do
-    action :upgrade
+if node["nova"]["platform"]["ceilometer_packages"]
+
+  node["nova"]["platform"]["ceilometer_packages"]["common"].each do |pkg|
+    package pkg
   end
-end
 
-#  Cleanup old installation
-python_pip "ceilometer" do
-  action :remove
-end
+  # do not override the permissions from the packages
+  nova_owner = nil
+  nova_group = nil
 
-bin_names = ['agent-compute', 'agent-central', 'collector', 'dbsync', 'api']
-bin_names.each do |bin_name|
-  file "ceilometer-#{bin_name}" do
-    action :delete
+else  # install from source
+  require "uri"
+
+  include_recipe "nova::nova-common"
+  include_recipe "python::pip"
+  if node["nova"]["ceilometer"]["syslog"]["use"]
+    include_recipe "openstack-common::logging"
   end
-end
 
-# install source
-install_dir = node["nova"]["ceilometer"]["install_dir"]
+  dependent_pkgs = node["nova"]["ceilometer"]["dependent_pkgs"]
+  dependent_pkgs.each do |pkg|
+    package pkg do
+      action :upgrade
+    end
+  end
 
-nova_owner = node["nova"]["user"]
-nova_group = node["nova"]["group"]
+  #  Cleanup old installation
+  python_pip "ceilometer" do
+    action :remove
+  end
 
-directory install_dir do
-  owner nova_owner
-  group nova_group
-  mode  00755
-  recursive true
+  bin_names = ['agent-compute', 'agent-central', 'collector', 'dbsync', 'api']
+  bin_names.each do |bin_name|
+    file "ceilometer-#{bin_name}" do
+      action :delete
+    end
+  end
 
-  action :create
-end
+  # install source
+  install_dir = node["nova"]["ceilometer"]["install_dir"]
 
-git_branch = node["nova"]["ceilometer"]["branch"]
-git_repo = node["nova"]["ceilometer"]["repo"]
-git install_dir do
-  repo git_repo
-  reference git_branch
-  action :sync
-end
+  nova_owner = node["nova"]["user"]
+  nova_group = node["nova"]["group"]
 
-python_pip install_dir do
-  action :install
-end
+  directory install_dir do
+    owner nova_owner
+    group nova_group
+    mode  00755
+    recursive true
 
-directory ::File.dirname(ceilometer_conf) do
-  owner nova_owner
-  group nova_group
-  mode  00755
+    action :create
+  end
 
-  action :create
+  git_branch = node["nova"]["ceilometer"]["branch"]
+  git_repo = node["nova"]["ceilometer"]["repo"]
+  git install_dir do
+    repo git_repo
+    reference git_branch
+    action :sync
+  end
+
+  python_pip install_dir do
+    action :install
+  end
+
+  directory ::File.dirname(ceilometer_conf) do
+    owner nova_owner
+    group nova_group
+    mode  00755
+
+    action :create
+  end
 end
 
 rabbit_server_role = node["nova"]["rabbit_server_chef_role"]
@@ -101,7 +114,7 @@ nova_uri = db_uri("compute", nova_db_user, nova_db_pass)
 ceilo_db_info = db 'metering'
 ceilo_db_user = node['nova']['ceilometer']['db']['username']
 ceilo_db_pass = db_password "ceilometer"
-ceilo_db_query = ceilo_db_info['db_type'] == 'mysql' ? '?charset=utf8' : nil
+ceilo_db_query = ceilo_db_info['db_type'] == 'mysql' ? '?charset=utf8' : ''
 ceilo_db_uri = db_uri("metering", ceilo_db_user, ceilo_db_pass).to_s + ceilo_db_query
 
 service_user = node["nova"]["service_user"]

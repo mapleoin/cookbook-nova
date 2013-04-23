@@ -17,19 +17,30 @@
 # limitations under the License.
 #
 
-class ::Chef::Recipe
-  include ::Openstack
-end
-
 include_recipe "nova::ceilometer-common"
 
-bindir = '/usr/local/bin'
-ceilometer_conf = node["nova"]["ceilometer"]["conf"]
-conf_switch = "--config-file #{ceilometer_conf}"
+if node["nova"]["platform"]["ceilometer_packages"]
+  node["nova"]["platform"]["ceilometer_packages"]["agent-central"].each do |pkg|
+    package pkg
+  end
 
-service "ceilometer-agent-central" do
-  service_name "ceilometer-agent-central"
-  action [:start]
-  start_command "nohup #{bindir}/ceilometer-agent-central #{conf_switch} &"
-  stop_command "pkill -f ceilometer-agent-central"
+  service node["nova"]["platform"]["ceilometer_services"]["agent-central"] do
+    action [:start]
+  end
+
+else
+  class ::Chef::Recipe
+    include ::Openstack
+  end
+
+  bindir = '/usr/local/bin'
+  ceilometer_conf = node["nova"]["ceilometer"]["conf"]
+  conf_switch = "--config-file #{ceilometer_conf}"
+
+  service "ceilometer-agent-central" do
+    service_name "ceilometer-agent-central"
+    action [:start]
+    start_command "nohup #{bindir}/ceilometer-agent-central #{conf_switch} &"
+    stop_command "pkill -f ceilometer-agent-central"
+  end
 end

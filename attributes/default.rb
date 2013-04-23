@@ -213,6 +213,13 @@ when "fedora", "redhat", "centos", "suse" # :pragma-foodcritic: ~FC024 - won't f
   }
   if platform == "suse"
     default["nova"]["platform"]["common_packages"] = ["openstack-nova"]
+    default["nova"]["platform"]["ceilometer_packages"] = {
+      "common" => ["openstack-ceilometer"],
+      "agent-central" => ["openstack-ceilometer-agent-central"],
+    }
+    default["nova"]["platform"]["ceilometer_services"] = {
+      "agent-central" => "openstack-ceilometer-agent-central"
+    }
     default["nova"]["platform"]["kvm_packages"] = ["kvm"]
     default["nova"]["platform"]["xen_packages"] = ["kernel-xen", "xen", "xen-tools"]
     default["nova"]["platform"]["lxc_packages"] = ["lxc"]
@@ -252,14 +259,17 @@ when "ubuntu"
 end
 
 # ceilometer specific attrs
+default["nova"]["ceilometer"]["conf"] = "/etc/ceilometer/ceilometer.conf"
+default["nova"]["ceilometer"]["db"]["username"] = 'ceilometer'
+default["nova"]["ceilometer"]["periodic_interval"] = 600
+default["nova"]["ceilometer"]["syslog"]["use"] = false
+
+# ceilometer specific attrs used if installing from source
+default["nova"]["platform"]["ceilometer_packages"] ||= nil
 default["nova"]["ceilometer"]["api"]["server_hostname"] = "127.0.0.1"
 default["nova"]["ceilometer"]["api"]["auth"]["user"] = "admin"
 default["nova"]["ceilometer"]["api"]["auth"]["password"] = "adminpass"
 default["nova"]["ceilometer"]["branch"] = 'stable/folsom'
 default["nova"]["ceilometer"]["repo"] = "git://github.com/openstack/ceilometer.git"
-default["nova"]["ceilometer"]["conf"] = "/etc/ceilometer/ceilometer.conf"
-default["nova"]["ceilometer"]["db"]["username"] = 'ceilometer'
 default["nova"]["ceilometer"]["dependent_pkgs"] = ['libxslt-dev', 'libxml2-dev']
 default["nova"]["ceilometer"]["install_dir"] = '/opt/ceilometer'
-default["nova"]["ceilometer"]["periodic_interval"] = 600
-default["nova"]["ceilometer"]["syslog"]["use"] = false
